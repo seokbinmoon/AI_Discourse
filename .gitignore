@@ -3,3 +3,9 @@
 .RData
 .Ruserdata
 .DS_Store
+
+# Data (kept local, not tracked)
+Debate_kor/
+Debate_us/
+Official_Doc_kor/
+Official_Doc_us/

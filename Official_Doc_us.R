@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
-PDF_DIR        <- "."
+PDF_DIR        <- "Official_Doc_us"
 
 FINAL_K        <- 5
 SEED           <- 1227

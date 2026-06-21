@@ -55,9 +55,10 @@ stop_names <- c(
 stopwords_ko <- unique(c(stop_spoken, stop_meta, stop_generic, stop_theme, stop_names))
 
 # Data Loading (preserve in-file utterance order)
-files <- list.files(pattern = "\\.xlsx$")
+DATA_DIR <- "Debate_kor"
+files <- list.files(DATA_DIR, pattern = "\\.xlsx$", full.names = TRUE)
 raw <- lapply(files, function(f)
-  read_excel(f) %>% mutate(source_file = f, ord = row_number())) %>%
+  read_excel(f) %>% mutate(source_file = basename(f), ord = row_number())) %>%
   bind_rows()
 
 # Gov. vs. Non-Gov. labeling

@@ -11,8 +11,8 @@ suppressPackageStartupMessages({
 })
 
 # Settings
-K        <- c("정부" = 4, "비정부" = 5)
-GRP_EN   <- c("정부" = "Government", "비정부" = "Non-Government")
+K        <- c("Government" = 4, "Non-Government" = 5)
+GRP_EN   <- c("Government" = "Government", "Non-Government" = "Non-Government")
 MIN_TOK  <- 5        # Minimum tokens per pseudo-doc
 MIN_DF   <- 4        # Minimum doc appearances
 TOP_N    <- 10
@@ -77,25 +77,26 @@ stopwords_en_stem <- unique(c(
 ))
 
 # Data Loading
-files <- list.files(pattern = "\\.xlsx$")
+DATA_DIR <- "Debate_us"
+files <- list.files(DATA_DIR, pattern = "\\.xlsx$", full.names = TRUE)
 raw <- lapply(files, function(f)
-  read_excel(f) %>% mutate(source_file = f, ord = row_number())) %>%
+  read_excel(f) %>% mutate(source_file = basename(f), ord = row_number())) %>%
   bind_rows()
 
 # Gov. vs. Non-Gov. labeling
 # Hong & Davison 2010: pseudo-document
 dat <- raw %>%
-  filter(!is.na(내용), 구분 != "진행") %>%
-  mutate(group = if_else(구분 == "정부", "정부", "비정부")) %>%
+  filter(!is.na(Content), Category != "Host") %>%
+  mutate(group = if_else(Category == "Government", "Government", "Non-Government")) %>%
   arrange(source_file, ord) %>%
   group_by(source_file) %>%
-  mutate(turn = cumsum(행위자 != lag(행위자, default = first(행위자)) |
+  mutate(turn = cumsum(Speaker != lag(Speaker, default = first(Speaker)) |
                        group   != lag(group,   default = first(group)))) %>%
   ungroup() %>%
   group_by(source_file, turn) %>%
-  summarise(group  = first(group),
-            행위자 = first(행위자),
-            내용   = paste(내용, collapse = " "),
+  summarise(group   = first(group),
+            Speaker = first(Speaker),
+            Content = paste(Content, collapse = " "),
             .groups = "drop") %>%
   mutate(doc_id = paste0("d", row_number()))
 
@@ -107,7 +108,7 @@ if (length(ud_file) == 0) {
 ud_model <- udpipe_load_model(ud_file)
 
 # Extract nouns (udpipe: NOUN / PROPN) + Porter stemming
-anno <- udpipe_annotate(ud_model, x = dat$내용, doc_id = dat$doc_id) %>%
+anno <- udpipe_annotate(ud_model, x = dat$Content, doc_id = dat$doc_id) %>%
   as.data.frame()
 
 tokens <- anno %>%
@@ -156,16 +157,16 @@ run_lda <- function(grp) {
   ggsave(sprintf("lda_topterms_%s_us.png", grp), p, width = 11, height = 7, dpi = 150)
   top_terms
 }
-tt_gov    <- run_lda("정부")
-tt_nongov <- run_lda("비정부")
+tt_gov    <- run_lda("Government")
+tt_nongov <- run_lda("Non-Government")
 
 print_topics <- function(tt, grp) {
   for (tp in sort(unique(tt$topic)))
-    cat(sprintf("  토픽 %d: %s\n", tp,
+    cat(sprintf("  Topic %d: %s\n", tp,
                 paste(tt %>% filter(topic == tp) %>% pull(term), collapse = ", ")))
 }
-print_topics(tt_gov,    "정부")
-print_topics(tt_nongov, "비정부")
+print_topics(tt_gov,    "Government")
+print_topics(tt_nongov, "Non-Government")
 
 
 # Weighted log-odds
@@ -189,15 +190,15 @@ lo_debate <- tokens %>% count(group, noun, name = "n") %>% rename(word = noun) %
 write.csv(lo_debate, "logodds_gov_vs_nongov_us.csv",
           row.names = FALSE, fileEncoding = "UTF-8")
 
-cat("\n[오즈비] 정부 변별 어휘 Top 10 (z):\n")
-print(lo_debate %>% filter(group == "정부")   %>% slice_max(z, n = 10) %>%
+cat("\n[Log-Odds] Government distinctive words Top 10 (z):\n")
+print(lo_debate %>% filter(group == "Government")     %>% slice_max(z, n = 10) %>%
         transmute(word, z = round(z, 2), n))
-cat("\n[오즈비] 비정부 변별 어휘 Top 10 (z):\n")
-print(lo_debate %>% filter(group == "비정부") %>% slice_max(z, n = 10) %>%
+cat("\n[Log-Odds] Non-Government distinctive words Top 10 (z):\n")
+print(lo_debate %>% filter(group == "Non-Government") %>% slice_max(z, n = 10) %>%
         transmute(word, z = round(z, 2), n))
 
 LO_TOP <- 10
-lo_axis <- lo_debate %>% filter(group == "비정부")
+lo_axis <- lo_debate %>% filter(group == "Non-Government")
 lo_plot_df <- bind_rows(
   lo_axis %>% slice_max(z, n = LO_TOP, with_ties = FALSE),
   lo_axis %>% slice_min(z, n = LO_TOP, with_ties = FALSE) 

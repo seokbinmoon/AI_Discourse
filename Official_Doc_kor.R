@@ -9,7 +9,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
-CORPUS_CSV     <- "corpus_kor.csv"
+CORPUS_CSV     <- "Official_Doc_kor/corpus_kor.csv"
 
 FINAL_K        <- 4
 SEED           <- 1227

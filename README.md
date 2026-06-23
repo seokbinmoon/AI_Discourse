@@ -1,1 +1,4 @@
-# AI_Discourse (LDA)
+# Who Defines the Problem?
+: Governmental and Non-Governmental AI Discourse in Korea and the United States.
+
+This paper asks not whether AI is a problem, but who defines what kind of problem it is, treating national AI policy as an act of problematization through Bacchi's WPR framework. Using LDA topic modeling and weighted log-odds analysis of public debates and official documents in Korea and the United States, it compares how governmental and non-governmental actors construct AI discourse. In both countries the two sides diverge rather than converge: officials speak of institutions, infrastructure, strategy, and law, while non-governmental actors speak of technology, markets, labor, and human stakes. Korea splits along an institution-versus-technology line and the US along a strategy-versus-humanity line, yet both share the same structural partition. Official documents narrow the problem further, silencing questions of labor, rights, and distribution—showing that the problem is defined not by the public but by institutionally authoritative codification.
